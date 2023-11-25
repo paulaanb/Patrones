@@ -9,7 +9,7 @@ class PizzaDirector():
     def builder(self)-> PizzaBuilder:
         return self._builder
     
-    @builder.setter #este setter es para que el builder se pueda cambiar en tiempo de ejecución
+    @builder.setter
     def builder(self, builder: PizzaBuilder):
         self._builder = builder
 

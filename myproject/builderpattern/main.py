@@ -17,8 +17,7 @@ if __name__ == "__main__":
 
         while True:
             if validator.verificar_pizza():
-                # Escribe la fila de datos en el archivo CSV
+                
                 csv_writer.write_pizza_to_csv(pizza)
-                break  # Sal del bucle interno después de confirmar
-
-        break  # Sal del bucle principal después de confirmar
+                break 
+        break 

@@ -3,13 +3,14 @@ import csv
 class PizzaCSV:
     def __init__(self, file_name):
         self.file_name = file_name
+        self.file_path = f'web/app/{self.file_name}'
 
     def write_pizza_to_csv(self, pizza):
         with open(self.file_name, mode='a', newline='') as file:
             fieldnames = ['Masa', 'Salsa', 'Ingredientes Principales', 'Cocción', 'Presentación', 'Maridaje', 'Extras']
             writer = csv.DictWriter(file, fieldnames=fieldnames)
 
-          
+  
             if file.tell() == 0:
                 writer.writeheader()
 
