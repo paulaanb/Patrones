@@ -1,0 +1,60 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+
+  <div style="float:right;">
+
+    {% if request.user.is_authenticated %}
+     {% include 'carro/widget.html' %}
+    {% else %}
+      <div class="alert alert-danger text-center"> Debes iniciar sesión para poder pedir</div>
+
+    {% endif %}
+
+  
+  
+  </div>
+  <div class="row">
+
+
+    {% for combo in combos %}
+      <div class="col-md-4">
+        <div class="card" id="combo{{ combo.id }}" style="width: 100%;">
+          <img class="combo-image" src="{{ combo.imagen.url }}" class="card-img-top style=" >
+          <div class="card-body" style="text-align: center;">
+            <h7 class="card-title">{{combo.nombre}}</h7>
+            <div class="componentes" style="display: none;">
+              <p class='card-text'>
+                {% for componente in combo.componentes.all %}
+                  <li>{{componente.nombre}} - Precio: {{componente.precio}}</li>
+                {% endfor %}
+              </p>
+            </div>
+            <p class="card-text">Precio total: {{combo.calcular_precio_total}}&nbsp;€</p>
+          </div>
+
+          <div class="card-footer text-center">
+            <a href="{% url 'carro:agregar' combo.id %}" class="btn btn-success">Pedir</a>
+
+          </div>
+
+
+
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+  $(document).ready(function() {
+    $(".combo-image").click(function() {
+      var comboId = $(this).closest(".card").attr("id");
+      $("#" + comboId + " .componentes").slideToggle();
+    });
+  });
+</script>
+{% endblock %}

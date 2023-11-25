@@ -1,0 +1,36 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% block content %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+function recomendar_bebida() {
+    const seleccion = document.getElementById('id_maridaje_recomendado').value;
+    const bebida_recomendada = document.getElementById('id_bebida_recomendada');
+    const bebidasRecomendadas = {
+    'cerveza': 'anchoas, huevo, atun, bacon, aceitunas',
+    'vino_blanco': 'queso, gambas, champiñones, maiz, atun',
+    'vino_tinto': 'pimiento, aceitunas, queso, champiñones, carne picada, tomate',
+    'sangria': 'pollo, bacon, atun, queso, jamon, huevo, carne picada',
+    'cocacola': 'aceitunas, bacon, carne picada, champiñones, huevo, jamon, pimiento, pollo, queso, salchichas',
+    'fanta_naranja': 'huevo, atun, anchoas, maiz, gambas',
+    'fanta_limon': 'carne picada, bacon, champiñones, huevo, jamon, atun, pollo, pimiento, queso, salchichas',
+    'agua': 'huevo, bacon, champiñones, pollo, carne picada, pimiento, queso, salchichas, atun'
+};
+
+    
+    const coincidencias = bebidasRecomendadas[seleccion];
+    bebida_recomendada.value = coincidencias;
+}
+</script>
+
+<div class="form-control">
+    <h1>Pedir</h1>
+    <form action="{% url 'resumen_pedido' %}" method="POST">
+        {% csrf_token %}
+    
+        {{ form.as_p }}
+        <input type="submit" value="Enviar">
+    </form>
+</div>
+{% endblock %}
