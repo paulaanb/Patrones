@@ -180,6 +180,17 @@ def solicitar_opcion(mensaje, opciones):
 if __name__ == "__main__":
     # Solicitar al usuario que ingrese su nombre
     usuario = input("Introduce tu nombre de usuario: ")
+
+    try:
+        pedidos_usuario = leer_elementos_csv('pedidos.csv', usuario)
+    except FileNotFoundError:
+        print("El archivo 'pedidos.csv' no se encuentra en el directorio especificado. Se creará un nuevo archivo.")
+        
+    # Crear un nuevo archivo 'pedidos.csv'
+    with open('pedidos.csv', 'w') as nuevo_archivo:
+        nuevo_archivo.write("Usuario,Tipo,Elemento,Precio\n")
+
+    # Intentar leer el archivo nuevamente
     pedidos_usuario = leer_elementos_csv('pedidos.csv', usuario)
 
      # Crear instancias de elementos individuales (pizzas, bebidas, entrantes, postres)
