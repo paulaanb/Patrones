@@ -5,7 +5,6 @@ import pandas as pd
 import csv
 from django.http import HttpResponse
 
-
 # Create your views here.
 @transaction.atomic
 def menu(request):
@@ -50,13 +49,13 @@ def guardar_pedido_en_csv(request):
         # Escribir los encabezados al archivo
         writer.writeheader()
 
-       
+        # Escribir cada elemento del carrito al archivo
         for combo_id, combo_data in carro.items():
             writer.writerow({
                 'Combo ID': combo_id,
                 'Nombre': combo_data['nombre'],
                 'Precio': combo_data['precio']
-         
+                # Agregar más campos según sea necesario
             })
 
-    return HttpResponse(f"Contenido guardado exitosamente en {csv_file_name}.")
+    return HttpResponse(f"Carrito guardado exitosamente en {csv_file_name}.")
