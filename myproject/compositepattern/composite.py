@@ -2,8 +2,7 @@ from abc import ABC, abstractmethod
 import csv
 from myapp.menu.compositepatron import Pizza, Bebida, Postre, Entrante, Combo, ComboDuo
 from myapp.menu.estrategias import EstrategiaPrecioNormal, EstrategiaPrecioPromocional
-from myapp.menu.observer import SujetoObservable, ComponentMenu
-from myapp.menu.alianza import AlianzaEstrategica, ProductoAlianza
+
 
 # Clases del Composite Pattern
 class ComponentMenu(ABC):
@@ -97,22 +96,42 @@ class ComboDuo(ComponentMenu):
         self.nombre = nombre
         self.combo1 = None
         self.combo2 = None
+        self.maridaje = None
+        self.productos_socios = []
         self.estrategia_precio = estrategia_precio
 
     def personalizar(self, combo1, combo2):
         self.combo1 = combo1
         self.combo2 = combo2
 
+    def agregar_maridaje(self, maridaje):
+        self.maridaje = maridaje
+
+    def agregar_producto_socio(self, producto_socio):
+        self.productos_socios.append(producto_socio)
+
     def mostrar(self):
         print(f'Combo Duo: {self.nombre}')
+
         if self.combo1:
-            print(f'Menu:')
+            print(f'Menu 1:')
             self.combo1.mostrar()
+
         if self.combo2:
-            print(f'Menu:')
+            print(f'Menu 2:')
             self.combo2.mostrar()
 
+        if self.maridaje:
+            print(f'Maridaje Recomendado:')
+            self.maridaje.mostrar()
+
+        if self.productos_socios:
+            print(f'Productos de Socios Estratégicos:')
+            for producto_socio in self.productos_socios:
+                producto_socio.mostrar()
+
         precio_total = self.calcular_precio_total()
+
         if self.estrategia_precio:
             precio_total = self.estrategia_precio.aplicar_descuento(precio_total)
 
@@ -121,96 +140,125 @@ class ComboDuo(ComponentMenu):
     def calcular_precio_total(self):
         total_combo1 = self.combo1.calcular_precio_total() if self.combo1 else 0
         total_combo2 = self.combo2.calcular_precio_total() if self.combo2 else 0
-        return total_combo1 + total_combo2
+        precio_maridaje = self.maridaje.precio if self.maridaje else 0
+        precio_productos_socios = sum(producto_socio.precio for producto_socio in self.productos_socios)
 
+        precio_total = total_combo1 + total_combo2 + precio_maridaje + precio_productos_socios
 
-# Estrategias para el patrón Strategy
-class EstrategiaPrecioDescuento:
-    def __init__(self, descuento_porcentaje):
-        self.descuento_porcentaje = descuento_porcentaje
+        return precio_total
+class ComponentMenu:
+    pass
 
-    def aplicar_descuento(self, precio):
-        return precio - (precio * self.descuento_porcentaje / 100)
+class Combo(ComponentMenu):
+    pass
 
+class ComboDuo(ComponentMenu):
+    pass
 
-class EstrategiaPrecioPromocion:
-    def __init__(self, promocion_precio):
-        self.promocion_precio = promocion_precio
+class Maridaje(ComponentMenu):
+    def __init__(self, nombre, descripcion, precio):
+        self.nombre = nombre
+        self.descripcion = descripcion
+        self.precio = precio
 
-    def aplicar_descuento(self, precio):
-        return self.promocion_precio
+    def mostrar(self):
+        print(f'Maridaje: {self.nombre} - Descripción: {self.descripcion} - Precio: {self.precio}')
 
+class ProductoSocioEstrategico(ComponentMenu):
+    def __init__(self, nombre, descripcion, precio):
+        self.nombre = nombre
+        self.descripcion = descripcion
+        self.precio = precio
 
-class EstrategiaPrecioNormal:
-    def aplicar_descuento(self, precio):
-        return precio
+    def mostrar(self):
+        print(f'Producto de Socio Estratégico: {self.nombre} - Descripción: {self.descripcion} - Precio: {self.precio}')
 
-# Funciones para guardar y leer elementos desde un archivo CSV
+def mostrar_maridajes(maridajes):
+    print("\nMaridajes Recomendados:")
+    for maridaje in maridajes:
+        maridaje.mostrar()
+
+def mostrar_productos_socios(productos_socios):
+    print("\nProductos de Socios Estratégicos:")
+    for producto_socio in productos_socios:
+        producto_socio.mostrar()
+
 def guardar_elemento_csv(elemento, nombre_archivo, usuario):
     with open(nombre_archivo, 'a') as archivo:
         if isinstance(elemento, Combo):
             archivo.write(f'{usuario},Combo,{elemento.nombre},{elemento.calcular_precio_total()}\n')
+            for subelemento in elemento.elementos:
+                guardar_elemento_csv(subelemento, nombre_archivo, usuario)
         elif isinstance(elemento, ComboDuo):
             archivo.write(f'{usuario},ComboDuo,{elemento.nombre},{elemento.calcular_precio_total()}\n')
-        else:
-            archivo.write(f'{usuario},{elemento.__class__.__name__},{elemento.nombre},{elemento.precio}\n')
+            if elemento.combo1:
+                guardar_elemento_csv(elemento.combo1, nombre_archivo, usuario)
+            if elemento.combo2:
+                guardar_elemento_csv(elemento.combo2, nombre_archivo, usuario)
+        elif isinstance(elemento, (Pizza, Bebida, Entrante, Postre)):
+            archivo.write(f'{usuario},{type(elemento).__name__},{elemento.nombre},{elemento.precio}\n')
 
-
-def leer_elementos_csv(nombre_archivo):
+def leer_elementos_csv(nombre_archivo, usuario):
     elementos = []
+    combos = {}
 
     with open(nombre_archivo, 'r') as archivo:
-        lector_csv = csv.reader(archivo)
-        for linea in lector_csv:
-            usuario = linea[0]
-            tipo_elemento = linea[1]
-            nombre_elemento = linea[2]
-            precio_elemento = float(linea[3])
-
-            if tipo_elemento == 'Pizza':
-                elemento = Pizza(nombre_elemento, precio_elemento)
-            elif tipo_elemento == 'Bebida':
-                elemento = Bebida(nombre_elemento, precio_elemento)
-            elif tipo_elemento == 'Postre':
-                elemento = Postre(nombre_elemento, precio_elemento)
-            elif tipo_elemento == 'Entrante':
-                elemento = Entrante(nombre_elemento, precio_elemento)
-            elif tipo_elemento == 'Combo':
-                elemento = Combo(nombre_elemento)
-            elif tipo_elemento == 'ComboDuo':
-                elemento = ComboDuo(nombre_elemento)
-
-            elementos.append(elemento)
+        for linea in archivo:
+            usuario_archivo, tipo_elemento, nombre_elemento, precio_elemento = linea.strip().split(',')
+            if usuario_archivo == usuario:
+                if tipo_elemento == 'Combo':
+                    combo = Combo(nombre_elemento)
+                    combos[nombre_elemento] = combo
+                    elementos.append(combo)
+                elif tipo_elemento == 'ComboDuo':
+                    combo_duo = ComboDuo(nombre_elemento)
+                    combo_duo.combo1 = combos.get(nombre_elemento + "_1")
+                    combo_duo.combo2 = combos.get(nombre_elemento + "_2")
+                    elementos.append(combo_duo)
+                elif tipo_elemento in ['Pizza', 'Bebida', 'Entrante', 'Postre']:
+                    clase_elemento = globals()[tipo_elemento]
+                    elemento = clase_elemento(nombre_elemento, float(precio_elemento))
+                    elementos.append(elemento)
 
     return elementos
 
-def solicitar_opcion(mensaje, opciones_validas):
+def preguntar_guardar_historial():
+    while True:
+        respuesta = input("¿Deseas guardar el historial de pedidos? (si/no): ").lower()
+        if respuesta == 'si':
+            return True
+        elif respuesta == 'no':
+            return False
+        else:
+            print("Respuesta no válida. Por favor, ingresa 'si' o 'no'.")
+
+def solicitar_opcion(mensaje, opciones):
     while True:
         try:
             eleccion = int(input(mensaje))
-            if eleccion in opciones_validas:
+            if eleccion in opciones:
                 return eleccion
             else:
-                print("Opción no válida. Introduce un valor válido.")
+                print("Opción no válida. Por favor, elige una opción válida.")
         except ValueError:
-            print("Por favor, introduce un número válido.")
-def preguntar_guardar_historial():
-    while True:
-        respuesta = input("¿Quieres guardar el historial de pedidos? (si/no): ").lower()
-        if respuesta in ['si', 'no']:
-            return respuesta == 'si'
-        else:
-            print("Por favor, responde con 'si' o 'no'.")
+            print("Error: Ingresa un número entero.")
 
-class ClienteSuscriptor(SujetoObservable):
-    def __init__(self, nombre, categoria):
-        self.nombre = nombre
-        self.categoria = categoria
+if __name__ == "__main__":
+    # Solicitar al usuario que ingrese su nombre
+    usuario = input("Introduce tu nombre de usuario: ")
 
-    def actualizar(self, mensaje):
-        if self.categoria.lower() in mensaje.lower():
-            print(f"Cliente {self.nombre}: {mensaje}")
-def main():
+    try:
+        pedidos_usuario = leer_elementos_csv('pedidos.csv', usuario)
+    except FileNotFoundError:
+        print("El archivo 'pedidos.csv' no se encuentra en el directorio especificado. Se creará un nuevo archivo.")
+
+    # Crear un nuevo archivo 'pedidos.csv'
+    with open('pedidos.csv', 'w') as nuevo_archivo:
+        nuevo_archivo.write("Usuario,Tipo,Elemento,Precio\n")
+
+    # Intentar leer el archivo nuevamente
+    pedidos_usuario = leer_elementos_csv('pedidos.csv', usuario)
+
     # Crear instancias de elementos individuales (pizzas, bebidas, entrantes, postres)
     pizza_margarita = Pizza("Margarita", 10.0)
     pizza_pepperoni = Pizza("Pepperoni", 12.0)
@@ -235,7 +283,6 @@ def main():
     postre_frutas = Postre("Frutas", 4.0)
     postre_natillas = Postre("Natillas", 3.0)
     postre_tarta_de_la_abuela = Postre("Tarta de la abuela", 5.0)
-
 
     # Crear combos predefinidos
     combo_1 = Combo("Combo 1")
@@ -269,71 +316,20 @@ def main():
     combo_duo_2 = ComboDuo("Combo Duo 2")
     combo_duo_2.personalizar(combo_3, combo_4)
 
-    # Estrategias de precio
-    estrategia_descuento_10 = EstrategiaPrecioDescuento(10)
-    estrategia_promocion_25 = EstrategiaPrecioPromocion(25)
+    # Agregamos opciones ficticias de maridajes y productos de socios estratégicos
+    maridajes_disponibles = {
+        1: Maridaje("Vino Tinto", "Maridaje clásico con pizzas y pastas", 10.0),
+        2: Maridaje("Cerveza Artesanal", "Ideal con platos salados y postres", 8.0),
+        3: Maridaje("Refresco de Uva", "Refrescante y dulce", 4.0),
+    }
 
-    # Asignar estrategias a combos específicos
-    combo_1.estrategia_precio = estrategia_descuento_10
-    combo_3.estrategia_precio = estrategia_promocion_25
-    
-    # Crear instancias de productos o promociones
-    pizza_especial = Pizza("Pizza Especial", 15.0)
-    cerveza_promocion = Bebida("Cerveza Promocional", 3.0)
-    postre_del_dia = Postre("Postre del Día", 5.0)
-
-    # Introducir nuevos productos y notificar a los suscriptores
-    pizza_especial.introducir_nuevo_producto("Pizza Especial del Chef")
-    cerveza_promocion.introducir_nuevo_producto("¡Nueva Cerveza en Promoción!")
-    postre_del_dia.introducir_nuevo_producto("Descubre nuestro Postre Especial")
-
-    # Crear instancias de clientes suscriptores
-    cliente_vinos = ClienteSuscriptor("Amante de Vinos", "Pizza")
-    cliente_cervezas = ClienteSuscriptor("Fanático de Cervezas", "Bebida")
-    cliente_postres = ClienteSuscriptor("Dulce Amante", "Postre")
-
-    # Suscribir a los clientes a las categorías de su interés
-    pizza_especial.agregar_observador(cliente_vinos)
-    cerveza_promocion.agregar_observador(cliente_cervezas)
-    postre_del_dia.agregar_observador(cliente_postres)
-
-    # Crear una alianza estratégica
-    alianza_vinos = AlianzaEstrategica("Alianza de Vinos", "Explora nuestra selección exclusiva de vinos")
-
-    # Crear productos de aliados estratégicos
-    vino_tinto = ProductoAlianza("Vino Tinto Especial", 25.0, "Vino tinto de la región vinícola reconocida")
-    vino_blanco = ProductoAlianza("Vino Blanco Selecto", 20.0, "Refrescante vino blanco de la mejor calidad")
-
-    # Agregar productos de aliados estratégicos a la alianza
-    alianza_vinos.agregar_producto(vino_tinto)
-    alianza_vinos.agregar_producto(vino_blanco)
-
-    # Agregar alianza estratégica a tu sistema
-    pizza_margarita.agregar_alianza_estrategica(alianza_vinos)
-
-    # Actualizar productos de aliados estratégicos
-    vino_tinto.precio = 30.0
-    vino_tinto.descripcion = "Vino tinto de edición limitada, añada 2020"
-
-    # Mostrar productos actualizados
-    print(f"Precio actualizado del {vino_tinto.nombre}: {vino_tinto.precio}")
-    print(f"Descripción actualizada del {vino_tinto.nombre}: {vino_tinto.descripcion}")
-    
-    # Solicitar al usuario que ingrese su nombre
-    usuario = input("Introduce tu nombre de usuario: ")
-
-    try:
-        # Intentar leer el archivo de pedidos existente
-        pedidos_usuario = leer_elementos_csv('pedidos.csv')
-    except FileNotFoundError:
-        # Si no existe, crear un nuevo archivo
-        print("El archivo 'pedidos.csv' no se encuentra en el directorio especificado. Se creará un nuevo archivo.")
-        with open('pedidos.csv', 'w') as nuevo_archivo:
-            nuevo_archivo.write("Usuario,Tipo,Elemento,Precio\n")
-        # Intentar leer el archivo nuevamente
-        pedidos_usuario = leer_elementos_csv('pedidos.csv')
-
-    # Mostrar combos predefinidos y opciones
+    productos_socios_disponibles = {
+        1: ProductoSocioEstrategico("Tabla de Quesos", "Selección de quesos finos", 15.0),
+        2: ProductoSocioEstrategico("Brownie de Chocolate", "Postre delicioso y chocolateado", 7.0),
+        3: ProductoSocioEstrategico("Tiramisú", "Postre italiano clásico", 9.0),
+    }
+  
+    # Mostrar combos predefinidos
     while True:
         print("\nCombos predefinidos:")
         combo_1.mostrar()
@@ -348,9 +344,8 @@ def main():
         print("1. Crear combo personalizado")
         print("2. Elegir combo predefinido")
         print('3. Elegir combo Duo predefinido')
-        print('4. Mostrar historial de pedidos')
+        print('4.Mostrar historial de pedidos')
         print("5. Salir")
-
         eleccion = solicitar_opcion("Elige una opción (1, 2, 3, 4 o 5): ", [1, 2, 3, 4, 5])
 
         if eleccion == 1:
@@ -372,7 +367,10 @@ def main():
                 "\nOpciones de postres:\n1. Tarta de queso\n2. Helado\n3. Frutas\n4. Natillas\n5. Tarta de la abuela\nElige un postre (1, 2, 3, 4 o 5): ",
                 [1, 2, 3, 4, 5]
             )
-
+            #Mostramos maridaje y productos socios
+            mostrar_maridajes(maridajes_disponibles.values())
+            mostrar_productos_socios(productos_socios_disponibles.values())
+            
             # Crear el combo personalizado
             combo_personalizado = Combo("Combo Personalizado")
             # Agregar elementos al combo personalizado según las elecciones del usuario
@@ -446,6 +444,14 @@ def main():
             # Mostrar el combo predefinido
             print("\nEl combo predefinido que has elegido es:")
             chosen_combo.mostrar()
+            #Mostramos maridaje y productos socios
+            mostrar_maridajes(maridajes_disponibles.values())
+            mostrar_productos_socios(productos_socios_disponibles.values())
+            
+            # Mostrar el precio final
+            precio_final = chosen_combo.calcular_precio_total()
+            print(f'\nPrecio Final (con descuentos aplicados): {precio_final}')
+
 
             # Preguntar si quieren pedir este combo
             if input("¿Quieres pedir este combo? (si/no): ").lower() == 'si':
@@ -475,6 +481,10 @@ def main():
             elif eleccion_combo2 == 2:
                 combo_duo_personalizado.personalizar(combo_duo_personalizado.combo1, combo_2)
 
+            #Mostramos maridaje y productos socios
+            mostrar_maridajes(maridajes_disponibles.values())
+            mostrar_productos_socios(productos_socios_disponibles.values())
+            
             # Mostrar el Combo Duo personalizado
             print("\nTu Combo Duo personalizado:")
             combo_duo_personalizado.mostrar()
@@ -508,5 +518,4 @@ def main():
             # Salir del programa
             print("Saliendo del programa...")
             break
-
     
