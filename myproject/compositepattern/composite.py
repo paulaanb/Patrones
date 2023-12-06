@@ -163,40 +163,58 @@ class Maridaje(ComponentMenu):
 
     def mostrar(self):
         print(f'Maridaje: {self.nombre} - Descripción: {self.descripcion} - Precio: {self.precio}')
-
 class ProductoSocioEstrategico(ComponentMenu):
-    def __init__(self, nombre, descripcion, precio):
+    def __init__(self, nombre, descripcion, precio, promocion):
         self.nombre = nombre
         self.descripcion = descripcion
         self.precio = precio
+        self.promocion = promocion
 
     def mostrar(self):
-        print(f'Producto de Socio Estratégico: {self.nombre} - Descripción: {self.descripcion} - Precio: {self.precio}')
+        print(f'Producto de Socio Estratégico: {self.nombre} - Descripción: {self.descripcion} - Precio: {self.precio} - Promoción: {self.promocion}')
 
-def mostrar_maridajes(maridajes):
-    print("\nMaridajes Recomendados:")
-    for maridaje in maridajes:
-        maridaje.mostrar()
+# Agregamos funciones para mostrar productos de socios estratégicos
 
 def mostrar_productos_socios(productos_socios):
     print("\nProductos de Socios Estratégicos:")
     for producto_socio in productos_socios:
         producto_socio.mostrar()
 
-def guardar_elemento_csv(elemento, nombre_archivo, usuario):
+# Actualizamos la función guardar_elemento_csv para incluir información sobre productos de socios y notificaciones
+
+def guardar_elemento_csv(elemento, nombre_archivo, usuario, notificaciones=None):
     with open(nombre_archivo, 'a') as archivo:
         if isinstance(elemento, Combo):
             archivo.write(f'{usuario},Combo,{elemento.nombre},{elemento.calcular_precio_total()}\n')
             for subelemento in elemento.elementos:
-                guardar_elemento_csv(subelemento, nombre_archivo, usuario)
+                guardar_elemento_csv(subelemento, nombre_archivo, usuario, notificaciones)
         elif isinstance(elemento, ComboDuo):
             archivo.write(f'{usuario},ComboDuo,{elemento.nombre},{elemento.calcular_precio_total()}\n')
             if elemento.combo1:
-                guardar_elemento_csv(elemento.combo1, nombre_archivo, usuario)
+                guardar_elemento_csv(elemento.combo1, nombre_archivo, usuario, notificaciones)
             if elemento.combo2:
-                guardar_elemento_csv(elemento.combo2, nombre_archivo, usuario)
+                guardar_elemento_csv(elemento.combo2, nombre_archivo, usuario, notificaciones)
         elif isinstance(elemento, (Pizza, Bebida, Entrante, Postre)):
             archivo.write(f'{usuario},{type(elemento).__name__},{elemento.nombre},{elemento.precio}\n')
+        elif isinstance(elemento, ProductoSocioEstrategico):
+            archivo.write(f'{usuario},ProductoSocio,{elemento.nombre},{elemento.precio},{elemento.promocion}\n')
+
+    # Guardar notificaciones si se proporcionan
+    if notificaciones:
+        try:
+            with open('notificaciones.csv', 'a') as archivo_notificaciones:
+                for notificacion in notificaciones:
+                    archivo_notificaciones.write(f'{usuario},{notificacion}\n')
+        except FileNotFoundError:
+            # El archivo 'notificaciones.csv' no existe, lo creamos y luego volvemos a intentar
+            with open('notificaciones.csv', 'w') as archivo_notificaciones:
+                pass  # Creamos el archivo vacío
+
+            with open('notificaciones.csv', 'a') as archivo_notificaciones:
+                for notificacion in notificaciones:
+                    archivo_notificaciones.write(f'{usuario},{notificacion}\n')
+                    
+# Actualizamos la función leer_elementos_csv para incluir información sobre productos de socios y notificaciones
 
 def leer_elementos_csv(nombre_archivo, usuario):
     elementos = []
@@ -204,7 +222,7 @@ def leer_elementos_csv(nombre_archivo, usuario):
 
     with open(nombre_archivo, 'r') as archivo:
         for linea in archivo:
-            usuario_archivo, tipo_elemento, nombre_elemento, precio_elemento = linea.strip().split(',')
+            usuario_archivo, tipo_elemento, nombre_elemento, *resto_elemento = linea.strip().split(',')
             if usuario_archivo == usuario:
                 if tipo_elemento == 'Combo':
                     combo = Combo(nombre_elemento)
@@ -215,9 +233,13 @@ def leer_elementos_csv(nombre_archivo, usuario):
                     combo_duo.combo1 = combos.get(nombre_elemento + "_1")
                     combo_duo.combo2 = combos.get(nombre_elemento + "_2")
                     elementos.append(combo_duo)
+                elif tipo_elemento == 'ProductoSocio':
+                    nombre_producto, precio_producto, promocion_producto = resto_elemento
+                    producto_socio = ProductoSocioEstrategico(nombre_producto, '', float(precio_producto), promocion_producto)
+                    elementos.append(producto_socio)
                 elif tipo_elemento in ['Pizza', 'Bebida', 'Entrante', 'Postre']:
                     clase_elemento = globals()[tipo_elemento]
-                    elemento = clase_elemento(nombre_elemento, float(precio_elemento))
+                    elemento = clase_elemento(nombre_elemento, float(resto_elemento[0]))
                     elementos.append(elemento)
 
     return elementos
@@ -242,7 +264,6 @@ def solicitar_opcion(mensaje, opciones):
                 print("Opción no válida. Por favor, elige una opción válida.")
         except ValueError:
             print("Error: Ingresa un número entero.")
-
 if __name__ == "__main__":
     # Solicitar al usuario que ingrese su nombre
     usuario = input("Introduce tu nombre de usuario: ")
