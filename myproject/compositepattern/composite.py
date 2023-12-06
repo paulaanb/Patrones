@@ -3,6 +3,7 @@ import csv
 from myapp.menu.compositepatron import Pizza, Bebida, Postre, Entrante, Combo, ComboDuo
 from myapp.menu.estrategias import EstrategiaPrecioNormal, EstrategiaPrecioPromocional
 from myapp.menu.observer import SujetoObservable, ComponentMenu
+from myapp.menu.alianza import AlianzaEstrategica, ProductoAlianza
 
 # Clases del Composite Pattern
 class ComponentMenu(ABC):
@@ -296,7 +297,28 @@ def main():
     cerveza_promocion.agregar_observador(cliente_cervezas)
     postre_del_dia.agregar_observador(cliente_postres)
 
+    # Crear una alianza estratégica
+    alianza_vinos = AlianzaEstrategica("Alianza de Vinos", "Explora nuestra selección exclusiva de vinos")
 
+    # Crear productos de aliados estratégicos
+    vino_tinto = ProductoAlianza("Vino Tinto Especial", 25.0, "Vino tinto de la región vinícola reconocida")
+    vino_blanco = ProductoAlianza("Vino Blanco Selecto", 20.0, "Refrescante vino blanco de la mejor calidad")
+
+    # Agregar productos de aliados estratégicos a la alianza
+    alianza_vinos.agregar_producto(vino_tinto)
+    alianza_vinos.agregar_producto(vino_blanco)
+
+    # Agregar alianza estratégica a tu sistema
+    pizza_margarita.agregar_alianza_estrategica(alianza_vinos)
+
+    # Actualizar productos de aliados estratégicos
+    vino_tinto.precio = 30.0
+    vino_tinto.descripcion = "Vino tinto de edición limitada, añada 2020"
+
+    # Mostrar productos actualizados
+    print(f"Precio actualizado del {vino_tinto.nombre}: {vino_tinto.precio}")
+    print(f"Descripción actualizada del {vino_tinto.nombre}: {vino_tinto.descripcion}")
+    
     # Solicitar al usuario que ingrese su nombre
     usuario = input("Introduce tu nombre de usuario: ")
 

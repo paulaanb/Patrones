@@ -14,6 +14,25 @@ class ComponentMenu(SujetoObservable, ABC):
     @abstractmethod
     def introducir_nuevo_producto(self, nombre):
         pass
+    
+    @abstractmethod
+    def agregar_alianza_estrategica(self, alianza):
+        pass
+class AlianzaEstrategica:
+    def __init__(self, nombre, descripcion):
+        self.nombre = nombre
+        self.descripcion = descripcion
+        self.productos = []
+
+    def agregar_producto(self, producto):
+        self.productos.append(producto)
+
+class ProductoAlianza:
+    def __init__(self, nombre, precio, descripcion):
+        self.nombre = nombre
+        self.precio = precio
+        self.descripcion = descripcion
+        
 class Pizza(ComponentMenu):
     def __init__(self, nombre, precio, estrategia_precio=EstrategiaPrecioNormal()):
         self.nombre = nombre
@@ -24,7 +43,7 @@ class Pizza(ComponentMenu):
         print(f'Pizza: {self.nombre} - Precio: {self.obtener_precio(self.estrategia_precio)}')
         
     def introducir_nuevo_producto(self, nombre):
-        mensaje = f"Nuevo producto introducido: {nombre}"
+        mensaje = f"Nuevo producto introducido para Pizza: {nombre}"
         self.notificar_observadores(mensaje)
 class Bebida(ComponentMenu):
     def __init__(self, nombre, precio, estrategia_precio=EstrategiaPrecioNormal()):
@@ -36,7 +55,7 @@ class Bebida(ComponentMenu):
         print(f'Bebida: {self.nombre} - Precio: {self.obtener_precio(self.estrategia_precio)}')
         
     def introducir_nuevo_producto(self, nombre):
-        mensaje = f"Nuevo producto introducido: {nombre}"
+        mensaje = f"Nuevo producto introducido para Bebida: {nombre}"
         self.notificar_observadores(mensaje)
 class Postre(ComponentMenu):
     def __init__(self, nombre, precio, estrategia_precio=EstrategiaPrecioNormal()):
@@ -48,7 +67,7 @@ class Postre(ComponentMenu):
         print(f'Postre: {self.nombre} - Precio: {self.obtener_precio(self.estrategia_precio)}')
 
     def introducir_nuevo_producto(self, nombre):
-        mensaje = f"Nuevo producto introducido: {nombre}"
+        mensaje = f"Nuevo producto introducido para Postre: {nombre}"
         self.notificar_observadores(mensaje)       
 
 class Entrante(ComponentMenu):
@@ -61,7 +80,7 @@ class Entrante(ComponentMenu):
         print(f'Entrante: {self.nombre} - Precio: {self.obtener_precio(self.estrategia_precio)}')
 
     def introducir_nuevo_producto(self, nombre):
-        mensaje = f"Nuevo producto introducido: {nombre}"
+        mensaje = f"Nuevo producto introducido para Entrande: {nombre}"
         self.notificar_observadores(mensaje)
 class Combo(ComponentMenu):
     def __init__(self, nombre):
@@ -75,7 +94,7 @@ class Combo(ComponentMenu):
         self.elementos.remove(elemento)
         
     def introducir_nuevo_producto(self, nombre):
-        mensaje = f"Nuevo producto introducido: {nombre}"
+        mensaje = f"Nuevo producto introducido para Combo: {nombre}"
         self.notificar_observadores(mensaje)        
     
     def mostrar(self):
@@ -97,7 +116,7 @@ class ComboDuo(ComponentMenu):
         self.combo2 = combo2
     
     def introducir_nuevo_producto(self, nombre):
-        mensaje = f"Nuevo producto introducido: {nombre}"
+        mensaje = f"Nuevo producto introducido para Combo Duo: {nombre}"
         self.notificar_observadores(mensaje)
 
     def mostrar(self):
