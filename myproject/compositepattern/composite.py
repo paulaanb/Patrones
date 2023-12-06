@@ -1,25 +1,31 @@
 from abc import ABC, abstractmethod
 import csv
+from myapp.menu.compositepatron import Pizza, Bebida, Postre, Entrante, Combo, ComboDuo
+from myapp.menu.estrategias import EstrategiaPrecioNormal, EstrategiaPrecioPromocional
+# Clases del Composite Pattern
 class ComponentMenu(ABC):
-
-
     @abstractmethod
     def mostrar(self):
         pass
 
-class Pizza(ComponentMenu):
+    @abstractmethod
+    def calcular_precio_total(self):
+        pass
 
+
+class Pizza(ComponentMenu):
     def __init__(self, nombre, precio):
         self.nombre = nombre
         self.precio = precio
 
-
     def mostrar(self):
         print(f'Pizza: {self.nombre} - Precio: {self.precio}')
 
+    def calcular_precio_total(self):
+        return self.precio
+
 
 class Bebida(ComponentMenu):
-
     def __init__(self, nombre, precio):
         self.nombre = nombre
         self.precio = precio
@@ -27,55 +33,68 @@ class Bebida(ComponentMenu):
     def mostrar(self):
         print(f'Bebida: {self.nombre} - Precio: {self.precio}')
 
+    def calcular_precio_total(self):
+        return self.precio
+
+
 class Postre(ComponentMenu):
-    
-        def __init__(self, nombre, precio):
-            self.nombre = nombre
-            self.precio = precio
-    
-        def mostrar(self):
-            print(f'Postre: {self.nombre} - Precio: {self.precio}')
+    def __init__(self, nombre, precio):
+        self.nombre = nombre
+        self.precio = precio
+
+    def mostrar(self):
+        print(f'Postre: {self.nombre} - Precio: {self.precio}')
+
+    def calcular_precio_total(self):
+        return self.precio
+
 
 class Entrante(ComponentMenu):
-        
-            def __init__(self, nombre, precio):
-                self.nombre = nombre
-                self.precio = precio
-        
-            def mostrar(self):
-                print(f'Entrante: {self.nombre} - Precio: {self.precio}')
+    def __init__(self, nombre, precio):
+        self.nombre = nombre
+        self.precio = precio
 
+    def mostrar(self):
+        print(f'Entrante: {self.nombre} - Precio: {self.precio}')
+
+    def calcular_precio_total(self):
+        return self.precio
 
 
 class Combo(ComponentMenu):
-
-    def __init__(self, nombre):
+    def __init__(self, nombre, estrategia_precio=None):
         self.nombre = nombre
         self.elementos = []
+        self.estrategia_precio = estrategia_precio
 
     def agregar(self, elemento):
         self.elementos.append(elemento)
 
     def eliminar(self, elemento):
         self.elementos.remove(elemento)
-    
+
     def mostrar(self):
         print(f'Combo: {self.nombre}')
 
         for elemento in self.elementos:
             elemento.mostrar()
 
-        print(f'Precio Total del Combo: {self.calcular_precio_total()}')
+        precio_total = self.calcular_precio_total()
+        if self.estrategia_precio:
+            precio_total = self.estrategia_precio.aplicar_descuento(precio_total)
+
+        print(f'Precio Total del Combo: {precio_total}')
 
     def calcular_precio_total(self):
-        return sum(elemento.precio for elemento in self.elementos)
+        return sum(elemento.calcular_precio_total() for elemento in self.elementos)
 
 
 class ComboDuo(ComponentMenu):
-    def __init__(self, nombre):
+    def __init__(self, nombre, estrategia_precio=None):
         self.nombre = nombre
         self.combo1 = None
         self.combo2 = None
+        self.estrategia_precio = estrategia_precio
 
     def personalizar(self, combo1, combo2):
         self.combo1 = combo1
@@ -89,111 +108,82 @@ class ComboDuo(ComponentMenu):
         if self.combo2:
             print(f'Menu:')
             self.combo2.mostrar()
-        print(f'Precio Total del Combo Duo: {self.calcular_precio_total()}')
+
+        precio_total = self.calcular_precio_total()
+        if self.estrategia_precio:
+            precio_total = self.estrategia_precio.aplicar_descuento(precio_total)
+
+        print(f'Precio Total del Combo Duo: {precio_total}')
 
     def calcular_precio_total(self):
         total_combo1 = self.combo1.calcular_precio_total() if self.combo1 else 0
         total_combo2 = self.combo2.calcular_precio_total() if self.combo2 else 0
         return total_combo1 + total_combo2
-    
 
+
+# Estrategias para el patrón Strategy
+class EstrategiaPrecioDescuento:
+    def __init__(self, descuento_porcentaje):
+        self.descuento_porcentaje = descuento_porcentaje
+
+    def aplicar_descuento(self, precio):
+        return precio - (precio * self.descuento_porcentaje / 100)
+
+
+class EstrategiaPrecioPromocion:
+    def __init__(self, promocion_precio):
+        self.promocion_precio = promocion_precio
+
+    def aplicar_descuento(self, precio):
+        return self.promocion_precio
+
+
+class EstrategiaPrecioNormal:
+    def aplicar_descuento(self, precio):
+        return precio
+
+# Funciones para guardar y leer elementos desde un archivo CSV
 def guardar_elemento_csv(elemento, nombre_archivo, usuario):
     with open(nombre_archivo, 'a') as archivo:
         if isinstance(elemento, Combo):
             archivo.write(f'{usuario},Combo,{elemento.nombre},{elemento.calcular_precio_total()}\n')
-            for subelemento in elemento.elementos:
-                guardar_elemento_csv(subelemento, nombre_archivo, usuario)
         elif isinstance(elemento, ComboDuo):
             archivo.write(f'{usuario},ComboDuo,{elemento.nombre},{elemento.calcular_precio_total()}\n')
-            if elemento.combo1:
-                guardar_elemento_csv(elemento.combo1, nombre_archivo, usuario)
-            if elemento.combo2:
-                guardar_elemento_csv(elemento.combo2, nombre_archivo, usuario)
-        elif isinstance(elemento, (Pizza, Bebida, Entrante, Postre)):
-            archivo.write(f'{usuario},{type(elemento).__name__},{elemento.nombre},{elemento.precio}\n')
+        else:
+            archivo.write(f'{usuario},{elemento.__class__.__name__},{elemento.nombre},{elemento.precio}\n')
 
-def guardar_elemento_csv(elemento, nombre_archivo, usuario):
-    with open(nombre_archivo, 'a') as archivo:
-        if isinstance(elemento, Combo):
-            archivo.write(f'{usuario},Combo,{elemento.nombre},{elemento.calcular_precio_total()}\n')
-            for subelemento in elemento.elementos:
-                guardar_elemento_csv(subelemento, nombre_archivo, usuario)
-        elif isinstance(elemento, ComboDuo):
-            archivo.write(f'{usuario},ComboDuo,{elemento.nombre},{elemento.calcular_precio_total()}\n')
-            if elemento.combo1:
-                guardar_elemento_csv(elemento.combo1, nombre_archivo, usuario)
-            if elemento.combo2:
-                guardar_elemento_csv(elemento.combo2, nombre_archivo, usuario)
-        elif isinstance(elemento, (Pizza, Bebida, Entrante, Postre)):
-            archivo.write(f'{usuario},{type(elemento).__name__},{elemento.nombre},{elemento.precio}\n')
 
-def leer_elementos_csv(nombre_archivo, usuario):
+def leer_elementos_csv(nombre_archivo):
     elementos = []
-    combos = {}
 
     with open(nombre_archivo, 'r') as archivo:
-        for linea in archivo:
-            usuario_archivo, tipo_elemento, nombre_elemento, precio_elemento = linea.strip().split(',')
-            if usuario_archivo == usuario:
-                if tipo_elemento == 'Combo':
-                    combo = Combo(nombre_elemento)
-                    combos[nombre_elemento] = combo
-                    elementos.append(combo)
-                elif tipo_elemento == 'ComboDuo':
-                    combo_duo = ComboDuo(nombre_elemento)
-                    combo_duo.combo1 = combos.get(nombre_elemento + "_1")
-                    combo_duo.combo2 = combos.get(nombre_elemento + "_2")
-                    elementos.append(combo_duo)
-                elif tipo_elemento in ['Pizza', 'Bebida', 'Entrante', 'Postre']:
-                    clase_elemento = globals()[tipo_elemento]
-                    elemento = clase_elemento(nombre_elemento, float(precio_elemento))
-                    elementos.append(elemento)
+        lector_csv = csv.reader(archivo)
+        for linea in lector_csv:
+            usuario = linea[0]
+            tipo_elemento = linea[1]
+            nombre_elemento = linea[2]
+            precio_elemento = float(linea[3])
+
+            if tipo_elemento == 'Pizza':
+                elemento = Pizza(nombre_elemento, precio_elemento)
+            elif tipo_elemento == 'Bebida':
+                elemento = Bebida(nombre_elemento, precio_elemento)
+            elif tipo_elemento == 'Postre':
+                elemento = Postre(nombre_elemento, precio_elemento)
+            elif tipo_elemento == 'Entrante':
+                elemento = Entrante(nombre_elemento, precio_elemento)
+            elif tipo_elemento == 'Combo':
+                elemento = Combo(nombre_elemento)
+            elif tipo_elemento == 'ComboDuo':
+                elemento = ComboDuo(nombre_elemento)
+
+            elementos.append(elemento)
 
     return elementos
 
 
-
-
-def preguntar_guardar_historial():
-    while True:
-        respuesta = input("¿Deseas guardar el historial de pedidos? (si/no): ").lower()
-        if respuesta == 'si':
-            return True
-        elif respuesta == 'no':
-            return False
-        else:
-            print("Respuesta no válida. Por favor, ingresa 'si' o 'no'.")
-
-
-def solicitar_opcion(mensaje, opciones):
-    while True:
-        try:
-            eleccion = int(input(mensaje))
-            if eleccion in opciones:
-                return eleccion
-            else:
-                print("Opción no válida. Por favor, elige una opción válida.")
-        except ValueError:
-            print("Error: Ingresa un número entero.")
-
-
-if __name__ == "__main__":
-    # Solicitar al usuario que ingrese su nombre
-    usuario = input("Introduce tu nombre de usuario: ")
-
-    try:
-        pedidos_usuario = leer_elementos_csv('pedidos.csv', usuario)
-    except FileNotFoundError:
-        print("El archivo 'pedidos.csv' no se encuentra en el directorio especificado. Se creará un nuevo archivo.")
-        
-    # Crear un nuevo archivo 'pedidos.csv'
-    with open('pedidos.csv', 'w') as nuevo_archivo:
-        nuevo_archivo.write("Usuario,Tipo,Elemento,Precio\n")
-
-    # Intentar leer el archivo nuevamente
-    pedidos_usuario = leer_elementos_csv('pedidos.csv', usuario)
-
-     # Crear instancias de elementos individuales (pizzas, bebidas, entrantes, postres)
+def main():
+    # Crear instancias de elementos individuales (pizzas, bebidas, entrantes, postres)
     pizza_margarita = Pizza("Margarita", 10.0)
     pizza_pepperoni = Pizza("Pepperoni", 12.0)
     pizza_vegetariana = Pizza("Vegetariana", 11.0)
@@ -244,19 +234,36 @@ if __name__ == "__main__":
     combo_4.agregar(bebida_cerveza)
     combo_4.agregar(postre_tarta_de_la_abuela)
 
-  # Crear combos Duo predefinidos
-
+    # Crear combos Duo predefinidos
     combo_duo_1 = ComboDuo("Combo Duo 1")
     combo_duo_1.personalizar(combo_1, combo_2)
 
     combo_duo_2 = ComboDuo("Combo Duo 2")
     combo_duo_2.personalizar(combo_3, combo_4)
 
+    # Estrategias de precio
+    estrategia_descuento_10 = EstrategiaPrecioDescuento(10)
+    estrategia_promocion_25 = EstrategiaPrecioPromocion(25)
 
+    # Asignar estrategias a combos específicos
+    combo_1.estrategia_precio = estrategia_descuento_10
+    combo_3.estrategia_precio = estrategia_promocion_25
 
+    # Solicitar al usuario que ingrese su nombre
+    usuario = input("Introduce tu nombre de usuario: ")
 
+    try:
+        # Intentar leer el archivo de pedidos existente
+        pedidos_usuario = leer_elementos_csv('pedidos.csv')
+    except FileNotFoundError:
+        # Si no existe, crear un nuevo archivo
+        print("El archivo 'pedidos.csv' no se encuentra en el directorio especificado. Se creará un nuevo archivo.")
+        with open('pedidos.csv', 'w') as nuevo_archivo:
+            nuevo_archivo.write("Usuario,Tipo,Elemento,Precio\n")
+        # Intentar leer el archivo nuevamente
+        pedidos_usuario = leer_elementos_csv('pedidos.csv')
 
-    # Mostrar combos predefinidos
+    # Mostrar combos predefinidos y opciones
     while True:
         print("\nCombos predefinidos:")
         combo_1.mostrar()
@@ -271,8 +278,9 @@ if __name__ == "__main__":
         print("1. Crear combo personalizado")
         print("2. Elegir combo predefinido")
         print('3. Elegir combo Duo predefinido')
-        print('4.Mostrar historial de pedidos')
+        print('4. Mostrar historial de pedidos')
         print("5. Salir")
+
         eleccion = solicitar_opcion("Elige una opción (1, 2, 3, 4 o 5): ", [1, 2, 3, 4, 5])
 
         if eleccion == 1:
