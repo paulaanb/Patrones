@@ -1,11 +1,8 @@
+# observer.py
+
 from abc import ABC, abstractmethod
 
-class Observador(ABC):
-    @abstractmethod
-    def actualizar(self, evento):
-        pass
-
-class Sujeto:
+class SujetoObservable(ABC):
     def __init__(self):
         self.observadores = []
 
@@ -15,29 +12,15 @@ class Sujeto:
     def eliminar_observador(self, observador):
         self.observadores.remove(observador)
 
-    def notificar_observadores(self, evento):
+    def notificar_observadores(self, mensaje):
         for observador in self.observadores:
-            observador.actualizar(evento)
-class Notificador(Sujeto):
-    def enviar_notificacion(self, evento):
-        self.notificar_observadores(evento)
-class ObservadorVinos(Observador):
-    def actualizar(self, evento):
-        # Lógica para manejar la notificación de nuevos vinos
+            observador.actualizar(mensaje)
+
+class ComponentMenu(SujetoObservable, ABC):
+    @abstractmethod
+    def mostrar(self):
         pass
 
-class ObservadorCervezas(Observador):
-    def actualizar(self, evento):
-        # Lógica para manejar la notificación de promociones de cervezas
+    @abstractmethod
+    def obtener_precio(self, estrategia):
         pass
-# Ejemplo de uso
-notificador = Notificador()
-cliente1 = ObservadorVinos()
-cliente2 = ObservadorCervezas()
-
-notificador.agregar_observador(cliente1)
-notificador.agregar_observador(cliente2)
-
-# Cuando haya un nuevo vino o una promoción de cerveza, se notifica a los observadores.
-notificador.enviar_notificacion("Nuevo vino disponible")
-notificador.enviar_notificacion("Promoción de cervezas")

@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 import csv
 from myapp.menu.compositepatron import Pizza, Bebida, Postre, Entrante, Combo, ComboDuo
 from myapp.menu.estrategias import EstrategiaPrecioNormal, EstrategiaPrecioPromocional
+from myapp.menu.observer import SujetoObservable, ComponentMenu
+
 # Clases del Composite Pattern
 class ComponentMenu(ABC):
     @abstractmethod
@@ -181,7 +183,32 @@ def leer_elementos_csv(nombre_archivo):
 
     return elementos
 
+def solicitar_opcion(mensaje, opciones_validas):
+    while True:
+        try:
+            eleccion = int(input(mensaje))
+            if eleccion in opciones_validas:
+                return eleccion
+            else:
+                print("Opción no válida. Introduce un valor válido.")
+        except ValueError:
+            print("Por favor, introduce un número válido.")
+def preguntar_guardar_historial():
+    while True:
+        respuesta = input("¿Quieres guardar el historial de pedidos? (si/no): ").lower()
+        if respuesta in ['si', 'no']:
+            return respuesta == 'si'
+        else:
+            print("Por favor, responde con 'si' o 'no'.")
 
+class ClienteSuscriptor(SujetoObservable):
+    def __init__(self, nombre, categoria):
+        self.nombre = nombre
+        self.categoria = categoria
+
+    def actualizar(self, mensaje):
+        if self.categoria.lower() in mensaje.lower():
+            print(f"Cliente {self.nombre}: {mensaje}")
 def main():
     # Crear instancias de elementos individuales (pizzas, bebidas, entrantes, postres)
     pizza_margarita = Pizza("Margarita", 10.0)
@@ -248,6 +275,27 @@ def main():
     # Asignar estrategias a combos específicos
     combo_1.estrategia_precio = estrategia_descuento_10
     combo_3.estrategia_precio = estrategia_promocion_25
+    
+    # Crear instancias de productos o promociones
+    pizza_especial = Pizza("Pizza Especial", 15.0)
+    cerveza_promocion = Bebida("Cerveza Promocional", 3.0)
+    postre_del_dia = Postre("Postre del Día", 5.0)
+
+    # Introducir nuevos productos y notificar a los suscriptores
+    pizza_especial.introducir_nuevo_producto("Pizza Especial del Chef")
+    cerveza_promocion.introducir_nuevo_producto("¡Nueva Cerveza en Promoción!")
+    postre_del_dia.introducir_nuevo_producto("Descubre nuestro Postre Especial")
+
+    # Crear instancias de clientes suscriptores
+    cliente_vinos = ClienteSuscriptor("Amante de Vinos", "Pizza")
+    cliente_cervezas = ClienteSuscriptor("Fanático de Cervezas", "Bebida")
+    cliente_postres = ClienteSuscriptor("Dulce Amante", "Postre")
+
+    # Suscribir a los clientes a las categorías de su interés
+    pizza_especial.agregar_observador(cliente_vinos)
+    cerveza_promocion.agregar_observador(cliente_cervezas)
+    postre_del_dia.agregar_observador(cliente_postres)
+
 
     # Solicitar al usuario que ingrese su nombre
     usuario = input("Introduce tu nombre de usuario: ")
