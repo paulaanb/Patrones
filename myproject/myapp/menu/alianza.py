@@ -1,4 +1,4 @@
-# alianzas.py
+# alianza.py
 
 class AlianzaEstrategica:
     def __init__(self, nombre, descripcion):
