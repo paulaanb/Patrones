@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import csv
-from myapp.menu.compositepatron import Pizza, Bebida, Postre, Entrante, Combo, ComboDuo
-from myapp.menu.estrategias import EstrategiaPrecioNormal, EstrategiaPrecioPromocional
+from compositepatron import Pizza, Bebida, Postre, Entrante, Combo, ComboDuo
+from estrategias import EstrategiaPrecioNormal, EstrategiaPrecioPromocional
 
 
 # Clases del Composite Pattern
@@ -497,17 +497,10 @@ if __name__ == "__main__":
             elif eleccion_combo1 == 2:
                 combo_duo_personalizado.personalizar(combo_2, None)
 
-            if eleccion_combo2 == 1:
-                combo_duo_personalizado.personalizar(combo_duo_personalizado.combo1, combo_1)
-            elif eleccion_combo2 == 2:
-                combo_duo_personalizado.personalizar(combo_duo_personalizado.combo1, combo_2)
-
-            #Mostramos maridaje y productos socios
-            mostrar_maridajes(maridajes_disponibles.values())
-            mostrar_productos_socios(productos_socios_disponibles.values())
-            
-            # Mostrar el Combo Duo personalizado
-            print("\nTu Combo Duo personalizado:")
+            # Define the function mostrar_maridajes
+            def mostrar_maridajes(maridajes):
+                for maridaje in maridajes:
+                    print(maridaje)
             combo_duo_personalizado.mostrar()
             #preguntamos si quiere guardar el historial
             if preguntar_guardar_historial():

@@ -1,6 +1,6 @@
 from django.db import transaction
 from django.shortcuts import render, redirect
-from menu.models import Combo
+from models import Combo
 import pandas as pd
 import csv
 from django.http import HttpResponse
