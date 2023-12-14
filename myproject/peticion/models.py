@@ -1,12 +1,12 @@
 from tabnanny import verbose
 from django.db import models
 
-from django.contrib.auth import get_user_mode
 from django.db.models import F,Sum, FloatField 
-from menu.models import Combo
+from models import Combo
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 User=get_user_model()
-
 
 class Peticion(models.Model):
     user=models.ForeignKey(User, on_delete=models.CASCADE)
