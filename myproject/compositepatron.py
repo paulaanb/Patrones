@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from menu.estrategias import EstrategiaPrecio, EstrategiaPrecioNormal
-from menu.observer import SujetoObservable
+from estrategias import EstrategiaPrecio, EstrategiaPrecioNormal
+from observer import SujetoObservable
 
 class ComponentMenu(SujetoObservable, ABC):
     @abstractmethod

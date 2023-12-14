@@ -1,6 +1,8 @@
 from django.shortcuts import render
-from .carro import Carro
-from menu.models import Combo
+from carro import Carro
+from models import *
+from composite import Combo
+
 
 from django.shortcuts import redirect
 

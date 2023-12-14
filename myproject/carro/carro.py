@@ -1,4 +1,5 @@
-from menu.models import Combo
+from models import *
+from myproject.compositepatron import Combo
 
 class Carro:
     def __init__(self, request):

@@ -1,7 +1,8 @@
 import unittest
 from unittest.mock import patch
 from io import StringIO
-from composite import *
+from composite import solicitar_opcion
+from myproject.compositepatron import *
 
 class TestMenu(unittest.TestCase):
 
