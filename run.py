@@ -3,7 +3,7 @@ import os
 
 print("Desplegando Django...")
 os.system("pip install -r requirements.txt")
-os.system("python myproject/manage.py makemigrations")
-os.system("python myproject/manage.py collectstatic")
-os.system("python myproject/manage.py migrate")
-os.system("python myproject/manage.py runserver")
+os.system("python manage.py makemigrations")
+os.system("python manage.py collectstatic")
+os.system("python manage.py migrate")
+os.system("python manage.py runserver")
